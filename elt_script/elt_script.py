@@ -8,7 +8,8 @@ def wait_for_postgres(host, max_retries=5, delay_seconds=5):
     while retries < max_retries:
         try:
             result = subprocess.run(
-                ["pg_isready", "-h", host], check=True, capture_output=True, text=True
+                ["pg_isready", "-h", host], check=True, capture_output=True,
+                text=True
             )
             if "accepting connections" in result.stdout:
                 print("Successfully connected to PostgreSQL!")
@@ -17,18 +18,13 @@ def wait_for_postgres(host, max_retries=5, delay_seconds=5):
             print(f"Error connecting to PostgreSQL: {e}")
             retries += 1
             print(
-                f"Retrying in {delay_seconds} seconds... (Attempt {retries}/{max_retries})"
+                f"Retrying in {delay_seconds} seconds... (Attempt {
+                    retries}/{max_retries})"
             )
             time.sleep(delay_seconds)
     print("Max retries reached. Exiting.")
     return False
 
-
-# Use the function before running the ELT process
-if not wait_for_postgres(host="source_postgres"):
-    exit(1)
-
-print("Starting ELT Script...")
 
 source_config = {
     "dbname": "source_db",
@@ -43,6 +39,13 @@ destination_config = {
     "password": "secret",
     "host": "destination_postgres",
 }
+
+# Use the function before running the ELT process
+if not wait_for_postgres(host=source_config['host']):
+    exit(1)
+
+print("Starting ELT Script...")
+
 
 dump_command = [
     "pg_dump",
